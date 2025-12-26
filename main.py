@@ -2,7 +2,7 @@ import flet as ft
 import json
 import random
 import os
-import base64
+import traceback
 
 # -------------------------------------------------------------------------
 # CONFIG
@@ -54,6 +54,7 @@ class ExamEngine:
     def load_data_from_path(self, filepath):
         """Loads JSON data from a specific file path selected by user."""
         try:
+            # Try reading strictly as utf-8 first
             with open(filepath, 'r', encoding='utf-8') as f:
                 raw_data = json.load(f)
             
@@ -61,7 +62,8 @@ class ExamEngine:
             self.file_loaded = True
             return None
         except Exception as e:
-            return f"Error loading file: {str(e)}"
+            # Return full error trace to help debug on mobile
+            return f"{type(e).__name__}: {str(e)}"
 
     def start_exam(self, start_id, end_id, shuffle_q, shuffle_ans):
         if not self.file_loaded:
@@ -101,7 +103,7 @@ class ExamEngine:
 # FLET GUI
 # -------------------------------------------------------------------------
 def main(page: ft.Page):
-    # Wrap main logic in Try-Catch to prevent white screen crashes on mobile
+    # Wrap main logic in Try-Catch to prevent white screen crashes
     try:
         page.title = "Exam Engine Mobile"
         page.theme_mode = ft.ThemeMode.LIGHT
@@ -145,10 +147,16 @@ def main(page: ft.Page):
         def on_file_picked(e: ft.FilePickerResultEvent):
             if e.files and len(e.files) > 0:
                 file_path = e.files[0].path
+                # Show path for debugging
+                file_status_text.value = f"Loading: {file_path}..."
+                file_status_text.color = COLORS['text']
+                page.update()
+                
                 if file_path:
                     err = engine.load_data_from_path(file_path)
                     if err:
-                        file_status_text.value = f"Error: {err}"
+                        # Show detailed error
+                        file_status_text.value = f"FAILED: {err}"
                         file_status_text.color = COLORS['error']
                     else:
                         file_status_text.value = f"Loaded: {e.files[0].name} ({len(engine.all_questions)} Qs)"
@@ -164,7 +172,8 @@ def main(page: ft.Page):
         page.overlay.append(file_picker)
 
         def on_pick_click(e):
-            file_picker.pick_files(allow_multiple=False, allowed_extensions=["json"])
+            # Allow any extension in case the phone renames it
+            file_picker.pick_files(allow_multiple=False)
 
         def on_start_click(e):
             if not engine.file_loaded:
