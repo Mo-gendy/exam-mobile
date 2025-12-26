@@ -1,1 +1,1 @@
-flet build apk
+flet
