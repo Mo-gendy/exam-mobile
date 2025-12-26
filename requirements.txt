@@ -1,9 +1,1 @@
-# ... previous steps ...
-
-      # 5. Build the APK using Flet CLI
-      # REMOVED: --include-packages python-docx
-      - name: Build APK
-        run: |
-          flet build apk
-
-      # ... next steps ...
+flet build apk
