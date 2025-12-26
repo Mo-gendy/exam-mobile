@@ -42,7 +42,7 @@ jobs:
       # We explicitly include python-docx so it gets packaged into the app
       - name: Build APK
         run: |
-          flet build apk --include-packages python-docx
+          flet build apk
 
       # 6. Upload the result so you can download it
       - name: Upload APK
